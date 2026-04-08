@@ -30,4 +30,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git add index.html
           git commit -m "Auto-update index.html from notebook" || echo "No changes to commit"
-          git push
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/kwadwoai/Crosstab_Tool.git HEAD:main
