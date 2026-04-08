@@ -7803,7 +7803,7 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="Tool-1:-Pre-Training-(Systemic-Proxy-Audit)">Tool 1: Pre-Training (Systemic Proxy Audit)<a class="anchor-link" href="#Tool-1:-Pre-Training-(Systemic-Proxy-Audit)">¶</a></h2><p><strong>Goal:</strong> Identify the protected class feature <code>gender</code> hidden in neutral features before the model is trained.</p>
-<p>I audited four pillars of socio-economic data: Geographic (location_type), Economic (job_type), Educational (education_level), and Social (relationship_with_head). These features were chosen because they represent the most common areas where inequality is often reflected in financial datasets.</p>
+<p>I audited four pillars of socio-economic data: Geographic <code>location_type</code>, Economic <code>job_type</code>, Educational <code>education_level</code>, and Social <code>relationship_with_head</code>. These features were chosen because they represent the most common areas where inequality is often reflected in financial datasets.</p>
 </div>
 </div>
 </div>
@@ -8194,7 +8194,7 @@ a.anchor-link {
 <p><strong>Educational Risk (education_level):</strong> No formal education (70.6%) shows a significant gender gap.</p>
 <p><strong>Geographic Risk (location_type):</strong> Both Rural (59.5%) and Urban (58.2%) exceed the risk threshold.</p>
 <hr/>
-<h3 id="Technical-Note:-The-%22Locked-Door%22-Analogy">Technical Note: The "Locked Door" Analogy<a class="anchor-link" href="#Technical-Note:-The-%22Locked-Door%22-Analogy">¶</a></h3><p>A whole feature is flagged as a proxy even if only one category (selection/ option) within it exceeds the threshold. Think of a feature with 100 categories (selections/ options) like a building with 100 doors. If 99 doors are locked but one is left wide open, the building is not "100% secure". It is compromised.</p>
+<h3 id="Technical-Note:-The-%22Locked-Door%22-Analogy">Technical Note: The "Locked Door" Analogy<a class="anchor-link" href="#Technical-Note:-The-%22Locked-Door%22-Analogy">¶</a></h3><p>A feature is flagged as a proxy even if only one category (selection/ option) within it exceeds the threshold. Think of a feature with 100 categories (selections/ options) like a building with 100 doors. If 99 doors are locked but one is left wide open, the building is not "100% secure". It is compromised. same thing happens when auditing AI, if even one one category (selection/ option) is flagged red it means that feature is not "100% secure". It is a compromised feature.</p>
 <p>While a category like Child (52.5%) is a "locked door" that hides gender, the Spouse category (98.6%) is a "door left wide open." It provides a direct path for the model to identify gender, meaning the entire feature must be flagged as a security risk to model fairness.</p>
 <hr/>
 <h3 id="Conclusion:">Conclusion:<a class="anchor-link" href="#Conclusion:">¶</a></h3><p>Because there is a red-flag "open door" in all of the features we selected, the model is at high risk for Hidden Discrimination. It could inadvertently penalize female applicants by using these proxies as substitutes for gender.</p>
