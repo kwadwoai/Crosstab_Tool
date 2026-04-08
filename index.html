@@ -7802,34 +7802,60 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Tool-1:-Pre-Training-(Crosstab-Tool)">Tool 1: Pre-Training (Crosstab Tool)<a class="anchor-link" href="#Tool-1:-Pre-Training-(Crosstab-Tool)">¶</a></h2><p>We begin by checking for proxy bias between two columns <code>location_type</code> and <code>gender</code>.
-Using my Crosstab Tool, If either male or female respondants in rural or urban locations
-are above my 55% threshold, this confirms <code>location_type</code>
-is a proxy/subsitute for <code>gender</code>. In other words, <code>gender</code> is baked/hidden/camoflauged inside of <code>location_type</code>.
-This is called a hidden discrimination risk.
-Note that the 55% threshold mark I set is not a universal standard.
-I set it as a threshold just for this specific audit.</p>
+<h2 id="Tool-1:-Pre-Training-(Systemic-Proxy-Audit)">Tool 1: Pre-Training (Systemic Proxy Audit)<a class="anchor-link" href="#Tool-1:-Pre-Training-(Systemic-Proxy-Audit)">¶</a></h2><p><strong>Goal:</strong> Identify the protected class feature <code>gender</code> hidden in neutral features before the model is trained.</p>
+<p>I audited four pillars of socio-economic data: Geographic (location_type), Economic (job_type), Educational (education_level), and Social (relationship_with_head). These features were chosen because they represent the most common areas where inequality is often reflected in financial datasets.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a0225803-6957-492c-9adf-dd65a2cadfab">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3b830461-2ab8-4332-afea-67d89b821908">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Create the distribution</span>
-<span class="n">proxy_report</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">'location_type'</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s1">'gender_of_respondent'</span><span class="p">],</span> <span class="n">normalize</span><span class="o">=</span><span class="s1">'index'</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="c1"># Add the 'Total' column for clarity</span>
-<span class="n">proxy_report</span><span class="p">[</span><span class="s1">'Total'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> 
+<span class="c1"># 1. Define the High-Contrast Binary Highlighting</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">highlight_final_style</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="ow">or</span> <span class="n">val</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">'background-color: #ffffff; color: #000000;'</span>
+    
+    <span class="c1"># ABOVE THRESHOLD: Bold Red Background / White Text</span>
+    <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="mf">0.55</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">'background-color: #d9534f; color: #ffffff; font-weight: bold; border: 1px solid #a94442;'</span>
+    
+    <span class="c1"># BELOW THRESHOLD: Light Tint Background / Sharp Black Text</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">'background-color: #fdf2f2; color: #000000;'</span>
 
-<span class="c1"># Format as a professional audit table with a warning color for anything over 55%</span>
-<span class="n">proxy_report</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"</span><span class="si">{:.2%}</span><span class="s2">"</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">background_gradient</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="s1">'Reds'</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">'Female'</span><span class="p">,</span><span class="s1">'Male'</span><span class="p">],</span> <span class="n">low</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">set_caption</span><span class="p">(</span><span class="s2">"Table 1.1: Location x Gender Proxy Risk Assessment"</span><span class="p">)</span>
+<span class="c1"># 2. Flexbox Container</span>
+<span class="n">html_start</span> <span class="o">=</span> <span class="s1">'&lt;div style="display: flex; flex-wrap: wrap; gap: 20px;"&gt;'</span>
+<span class="n">html_end</span> <span class="o">=</span> <span class="s1">'&lt;/div&gt;'</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_final_audit_html</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s1">'gender_of_respondent'</span><span class="p">],</span> <span class="n">normalize</span><span class="o">=</span><span class="s1">'index'</span><span class="p">)</span>
+    <span class="n">report</span><span class="p">[</span><span class="s1">'Total'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    
+    <span class="n">styled</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"</span><span class="si">{:.1%}</span><span class="s2">"</span><span class="p">)</span>\
+        <span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">highlight_final_style</span><span class="p">)</span>\
+        <span class="o">.</span><span class="n">set_caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;b style='font-family: Arial; font-size: 15px; color: #000; display: block; margin-bottom: 10px;'&gt;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&lt;/b&gt;"</span><span class="p">)</span>\
+        <span class="o">.</span><span class="n">set_table_attributes</span><span class="p">(</span><span class="s1">'style="margin-bottom: 25px; border-collapse: collapse; font-family: Arial; min-width: 300px; border: 1px solid #000;"'</span><span class="p">)</span>\
+        <span class="o">.</span><span class="n">set_properties</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s1">'padding'</span><span class="p">:</span> <span class="s1">'10px'</span><span class="p">,</span> <span class="s1">'text-align'</span><span class="p">:</span> <span class="s1">'center'</span><span class="p">})</span>
+        
+    <span class="k">return</span> <span class="n">styled</span><span class="o">.</span><span class="n">to_html</span><span class="p">()</span>
+
+<span class="c1"># 3. Execution</span>
+<span class="n">full_html</span> <span class="o">=</span> <span class="n">html_start</span>
+<span class="n">full_html</span> <span class="o">+=</span> <span class="n">get_final_audit_html</span><span class="p">(</span><span class="s1">'location_type'</span><span class="p">,</span> <span class="s2">"GEOGRAPHIC RISK"</span><span class="p">)</span>
+<span class="n">full_html</span> <span class="o">+=</span> <span class="n">get_final_audit_html</span><span class="p">(</span><span class="s1">'job_type'</span><span class="p">,</span> <span class="s2">"ECONOMIC RISK"</span><span class="p">)</span>
+<span class="n">full_html</span> <span class="o">+=</span> <span class="n">get_final_audit_html</span><span class="p">(</span><span class="s1">'education_level'</span><span class="p">,</span> <span class="s2">"EDUCATIONAL RISK"</span><span class="p">)</span>
+<span class="n">full_html</span> <span class="o">+=</span> <span class="n">get_final_audit_html</span><span class="p">(</span><span class="s1">'relationship_with_head'</span><span class="p">,</span> <span class="s2">"SOCIAL RISK"</span><span class="p">)</span>
+<span class="n">full_html</span> <span class="o">+=</span> <span class="n">html_end</span>
+
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">full_html</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -7839,27 +7865,39 @@ I set it as a threshold just for this specific audit.</p>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[16]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<style type="text/css">
-#T_072b0_row0_col0, #T_072b0_row1_col1 {
-  background-color: #d92523;
-  color: #f1f1f1;
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div style="display: flex; flex-wrap: wrap; gap: 20px;"><style type="text/css">
+#T_0d878_row0_col0, #T_0d878_row1_col0 {
+  background-color: #d9534f;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #a94442;
+  padding: 10px;
+  text-align: center;
 }
-#T_072b0_row0_col1, #T_072b0_row1_col0 {
-  background-color: #fdcab5;
+#T_0d878_row0_col1, #T_0d878_row1_col1 {
+  background-color: #fdf2f2;
   color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+#T_0d878_row0_col2, #T_0d878_row1_col2 {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
 }
 </style>
-<table id="T_072b0">
-<caption>Table 1.1: Location x Gender Proxy Risk Assessment</caption>
+<table id="T_0d878" style="margin-bottom: 25px; border-collapse: collapse; font-family: Arial; min-width: 300px; border: 1px solid #000;">
+<caption><b style="font-family: Arial; font-size: 15px; color: #000; display: block; margin-bottom: 10px;">GEOGRAPHIC RISK</b></caption>
 <thead>
 <tr>
 <th class="index_name level0">gender_of_respondent</th>
-<th class="col_heading level0 col0" id="T_072b0_level0_col0">Female</th>
-<th class="col_heading level0 col1" id="T_072b0_level0_col1">Male</th>
-<th class="col_heading level0 col2" id="T_072b0_level0_col2">Total</th>
+<th class="col_heading level0 col0" id="T_0d878_level0_col0">Female</th>
+<th class="col_heading level0 col1" id="T_0d878_level0_col1">Male</th>
+<th class="col_heading level0 col2" id="T_0d878_level0_col2">Total</th>
 </tr>
 <tr>
 <th class="index_name level0">location_type</th>
@@ -7870,16 +7908,271 @@ I set it as a threshold just for this specific audit.</p>
 </thead>
 <tbody>
 <tr>
-<th class="row_heading level0 row0" id="T_072b0_level0_row0">Rural</th>
-<td class="data row0 col0" id="T_072b0_row0_col0">59.50%</td>
-<td class="data row0 col1" id="T_072b0_row0_col1">40.50%</td>
-<td class="data row0 col2" id="T_072b0_row0_col2">100.00%</td>
+<th class="row_heading level0 row0" id="T_0d878_level0_row0">Rural</th>
+<td class="data row0 col0" id="T_0d878_row0_col0">59.5%</td>
+<td class="data row0 col1" id="T_0d878_row0_col1">40.5%</td>
+<td class="data row0 col2" id="T_0d878_row0_col2">100.0%</td>
 </tr>
 <tr>
-<th class="row_heading level0 row1" id="T_072b0_level0_row1">Urban</th>
-<td class="data row1 col0" id="T_072b0_row1_col0">58.20%</td>
-<td class="data row1 col1" id="T_072b0_row1_col1">41.80%</td>
-<td class="data row1 col2" id="T_072b0_row1_col2">100.00%</td>
+<th class="row_heading level0 row1" id="T_0d878_level0_row1">Urban</th>
+<td class="data row1 col0" id="T_0d878_row1_col0">58.2%</td>
+<td class="data row1 col1" id="T_0d878_row1_col1">41.8%</td>
+<td class="data row1 col2" id="T_0d878_row1_col2">100.0%</td>
+</tr>
+</tbody>
+</table>
+<style type="text/css">
+#T_9d2b4_row0_col0, #T_9d2b4_row1_col0, #T_9d2b4_row3_col1, #T_9d2b4_row4_col0, #T_9d2b4_row6_col0, #T_9d2b4_row7_col0, #T_9d2b4_row8_col0, #T_9d2b4_row9_col0 {
+  background-color: #d9534f;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #a94442;
+  padding: 10px;
+  text-align: center;
+}
+#T_9d2b4_row0_col1, #T_9d2b4_row1_col1, #T_9d2b4_row2_col0, #T_9d2b4_row2_col1, #T_9d2b4_row3_col0, #T_9d2b4_row4_col1, #T_9d2b4_row5_col0, #T_9d2b4_row5_col1, #T_9d2b4_row6_col1, #T_9d2b4_row7_col1, #T_9d2b4_row8_col1, #T_9d2b4_row9_col1 {
+  background-color: #fdf2f2;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+#T_9d2b4_row0_col2, #T_9d2b4_row1_col2, #T_9d2b4_row2_col2, #T_9d2b4_row3_col2, #T_9d2b4_row4_col2, #T_9d2b4_row5_col2, #T_9d2b4_row6_col2, #T_9d2b4_row7_col2, #T_9d2b4_row8_col2, #T_9d2b4_row9_col2 {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+</style>
+<table id="T_9d2b4" style="margin-bottom: 25px; border-collapse: collapse; font-family: Arial; min-width: 300px; border: 1px solid #000;">
+<caption><b style="font-family: Arial; font-size: 15px; color: #000; display: block; margin-bottom: 10px;">ECONOMIC RISK</b></caption>
+<thead>
+<tr>
+<th class="index_name level0">gender_of_respondent</th>
+<th class="col_heading level0 col0" id="T_9d2b4_level0_col0">Female</th>
+<th class="col_heading level0 col1" id="T_9d2b4_level0_col1">Male</th>
+<th class="col_heading level0 col2" id="T_9d2b4_level0_col2">Total</th>
+</tr>
+<tr>
+<th class="index_name level0">job_type</th>
+<th class="blank col0"> </th>
+<th class="blank col1"> </th>
+<th class="blank col2"> </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="row_heading level0 row0" id="T_9d2b4_level0_row0">Dont Know/Refuse to answer</th>
+<td class="data row0 col0" id="T_9d2b4_row0_col0">63.5%</td>
+<td class="data row0 col1" id="T_9d2b4_row0_col1">36.5%</td>
+<td class="data row0 col2" id="T_9d2b4_row0_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row1" id="T_9d2b4_level0_row1">Farming and Fishing</th>
+<td class="data row1 col0" id="T_9d2b4_row1_col0">59.2%</td>
+<td class="data row1 col1" id="T_9d2b4_row1_col1">40.8%</td>
+<td class="data row1 col2" id="T_9d2b4_row1_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row2" id="T_9d2b4_level0_row2">Formally employed Government</th>
+<td class="data row2 col0" id="T_9d2b4_row2_col0">47.8%</td>
+<td class="data row2 col1" id="T_9d2b4_row2_col1">52.2%</td>
+<td class="data row2 col2" id="T_9d2b4_row2_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row3" id="T_9d2b4_level0_row3">Formally employed Private</th>
+<td class="data row3 col0" id="T_9d2b4_row3_col0">44.8%</td>
+<td class="data row3 col1" id="T_9d2b4_row3_col1">55.2%</td>
+<td class="data row3 col2" id="T_9d2b4_row3_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row4" id="T_9d2b4_level0_row4">Government Dependent</th>
+<td class="data row4 col0" id="T_9d2b4_row4_col0">70.4%</td>
+<td class="data row4 col1" id="T_9d2b4_row4_col1">29.6%</td>
+<td class="data row4 col2" id="T_9d2b4_row4_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row5" id="T_9d2b4_level0_row5">Informally employed</th>
+<td class="data row5 col0" id="T_9d2b4_row5_col0">54.4%</td>
+<td class="data row5 col1" id="T_9d2b4_row5_col1">45.6%</td>
+<td class="data row5 col2" id="T_9d2b4_row5_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row6" id="T_9d2b4_level0_row6">No Income</th>
+<td class="data row6 col0" id="T_9d2b4_row6_col0">80.9%</td>
+<td class="data row6 col1" id="T_9d2b4_row6_col1">19.1%</td>
+<td class="data row6 col2" id="T_9d2b4_row6_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row7" id="T_9d2b4_level0_row7">Other Income</th>
+<td class="data row7 col0" id="T_9d2b4_row7_col0">61.6%</td>
+<td class="data row7 col1" id="T_9d2b4_row7_col1">38.4%</td>
+<td class="data row7 col2" id="T_9d2b4_row7_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row8" id="T_9d2b4_level0_row8">Remittance Dependent</th>
+<td class="data row8 col0" id="T_9d2b4_row8_col0">76.1%</td>
+<td class="data row8 col1" id="T_9d2b4_row8_col1">23.9%</td>
+<td class="data row8 col2" id="T_9d2b4_row8_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row9" id="T_9d2b4_level0_row9">Self employed</th>
+<td class="data row9 col0" id="T_9d2b4_row9_col0">56.0%</td>
+<td class="data row9 col1" id="T_9d2b4_row9_col1">44.0%</td>
+<td class="data row9 col2" id="T_9d2b4_row9_col2">100.0%</td>
+</tr>
+</tbody>
+</table>
+<style type="text/css">
+#T_6bc27_row0_col0, #T_6bc27_row1_col0, #T_6bc27_row2_col0 {
+  background-color: #d9534f;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #a94442;
+  padding: 10px;
+  text-align: center;
+}
+#T_6bc27_row0_col1, #T_6bc27_row1_col1, #T_6bc27_row2_col1, #T_6bc27_row3_col0, #T_6bc27_row3_col1, #T_6bc27_row4_col0, #T_6bc27_row4_col1, #T_6bc27_row5_col0, #T_6bc27_row5_col1 {
+  background-color: #fdf2f2;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+#T_6bc27_row0_col2, #T_6bc27_row1_col2, #T_6bc27_row2_col2, #T_6bc27_row3_col2, #T_6bc27_row4_col2, #T_6bc27_row5_col2 {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+</style>
+<table id="T_6bc27" style="margin-bottom: 25px; border-collapse: collapse; font-family: Arial; min-width: 300px; border: 1px solid #000;">
+<caption><b style="font-family: Arial; font-size: 15px; color: #000; display: block; margin-bottom: 10px;">EDUCATIONAL RISK</b></caption>
+<thead>
+<tr>
+<th class="index_name level0">gender_of_respondent</th>
+<th class="col_heading level0 col0" id="T_6bc27_level0_col0">Female</th>
+<th class="col_heading level0 col1" id="T_6bc27_level0_col1">Male</th>
+<th class="col_heading level0 col2" id="T_6bc27_level0_col2">Total</th>
+</tr>
+<tr>
+<th class="index_name level0">education_level</th>
+<th class="blank col0"> </th>
+<th class="blank col1"> </th>
+<th class="blank col2"> </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="row_heading level0 row0" id="T_6bc27_level0_row0">No formal education</th>
+<td class="data row0 col0" id="T_6bc27_row0_col0">70.6%</td>
+<td class="data row0 col1" id="T_6bc27_row0_col1">29.4%</td>
+<td class="data row0 col2" id="T_6bc27_row0_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row1" id="T_6bc27_level0_row1">Other/Dont know/RTA</th>
+<td class="data row1 col0" id="T_6bc27_row1_col0">62.9%</td>
+<td class="data row1 col1" id="T_6bc27_row1_col1">37.1%</td>
+<td class="data row1 col2" id="T_6bc27_row1_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row2" id="T_6bc27_level0_row2">Primary education</th>
+<td class="data row2 col0" id="T_6bc27_row2_col0">58.1%</td>
+<td class="data row2 col1" id="T_6bc27_row2_col1">41.9%</td>
+<td class="data row2 col2" id="T_6bc27_row2_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row3" id="T_6bc27_level0_row3">Secondary education</th>
+<td class="data row3 col0" id="T_6bc27_row3_col0">52.9%</td>
+<td class="data row3 col1" id="T_6bc27_row3_col1">47.1%</td>
+<td class="data row3 col2" id="T_6bc27_row3_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row4" id="T_6bc27_level0_row4">Tertiary education</th>
+<td class="data row4 col0" id="T_6bc27_row4_col0">50.0%</td>
+<td class="data row4 col1" id="T_6bc27_row4_col1">50.0%</td>
+<td class="data row4 col2" id="T_6bc27_row4_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row5" id="T_6bc27_level0_row5">Vocational/Specialised training</th>
+<td class="data row5 col0" id="T_6bc27_row5_col0">52.4%</td>
+<td class="data row5 col1" id="T_6bc27_row5_col1">47.6%</td>
+<td class="data row5 col2" id="T_6bc27_row5_col2">100.0%</td>
+</tr>
+</tbody>
+</table>
+<style type="text/css">
+#T_11b9a_row0_col0, #T_11b9a_row0_col1, #T_11b9a_row1_col0, #T_11b9a_row2_col1, #T_11b9a_row3_col1, #T_11b9a_row4_col1, #T_11b9a_row5_col1 {
+  background-color: #fdf2f2;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+#T_11b9a_row0_col2, #T_11b9a_row1_col2, #T_11b9a_row2_col2, #T_11b9a_row3_col2, #T_11b9a_row4_col2, #T_11b9a_row5_col2 {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 10px;
+  text-align: center;
+}
+#T_11b9a_row1_col1, #T_11b9a_row2_col0, #T_11b9a_row3_col0, #T_11b9a_row4_col0, #T_11b9a_row5_col0 {
+  background-color: #d9534f;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #a94442;
+  padding: 10px;
+  text-align: center;
+}
+</style>
+<table id="T_11b9a" style="margin-bottom: 25px; border-collapse: collapse; font-family: Arial; min-width: 300px; border: 1px solid #000;">
+<caption><b style="font-family: Arial; font-size: 15px; color: #000; display: block; margin-bottom: 10px;">SOCIAL RISK</b></caption>
+<thead>
+<tr>
+<th class="index_name level0">gender_of_respondent</th>
+<th class="col_heading level0 col0" id="T_11b9a_level0_col0">Female</th>
+<th class="col_heading level0 col1" id="T_11b9a_level0_col1">Male</th>
+<th class="col_heading level0 col2" id="T_11b9a_level0_col2">Total</th>
+</tr>
+<tr>
+<th class="index_name level0">relationship_with_head</th>
+<th class="blank col0"> </th>
+<th class="blank col1"> </th>
+<th class="blank col2"> </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="row_heading level0 row0" id="T_11b9a_level0_row0">Child</th>
+<td class="data row0 col0" id="T_11b9a_row0_col0">52.5%</td>
+<td class="data row0 col1" id="T_11b9a_row0_col1">47.5%</td>
+<td class="data row0 col2" id="T_11b9a_row0_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row1" id="T_11b9a_level0_row1">Head of Household</th>
+<td class="data row1 col0" id="T_11b9a_row1_col0">40.4%</td>
+<td class="data row1 col1" id="T_11b9a_row1_col1">59.6%</td>
+<td class="data row1 col2" id="T_11b9a_row1_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row2" id="T_11b9a_level0_row2">Other non-relatives</th>
+<td class="data row2 col0" id="T_11b9a_row2_col0">58.4%</td>
+<td class="data row2 col1" id="T_11b9a_row2_col1">41.6%</td>
+<td class="data row2 col2" id="T_11b9a_row2_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row3" id="T_11b9a_level0_row3">Other relative</th>
+<td class="data row3 col0" id="T_11b9a_row3_col0">55.5%</td>
+<td class="data row3 col1" id="T_11b9a_row3_col1">44.5%</td>
+<td class="data row3 col2" id="T_11b9a_row3_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row4" id="T_11b9a_level0_row4">Parent</th>
+<td class="data row4 col0" id="T_11b9a_row4_col0">56.5%</td>
+<td class="data row4 col1" id="T_11b9a_row4_col1">43.5%</td>
+<td class="data row4 col2" id="T_11b9a_row4_col2">100.0%</td>
+</tr>
+<tr>
+<th class="row_heading level0 row5" id="T_11b9a_level0_row5">Spouse</th>
+<td class="data row5 col0" id="T_11b9a_row5_col0">98.6%</td>
+<td class="data row5 col1" id="T_11b9a_row5_col1">1.4%</td>
+<td class="data row5 col2" id="T_11b9a_row5_col2">100.0%</td>
 </tr>
 </tbody>
 </table>
@@ -7888,22 +8181,28 @@ I set it as a threshold just for this specific audit.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=767d650b-a8d7-48db-9e96-d82d115c2e54">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=26b25dee-ea1b-419e-878b-a6a6a4bc34f3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Finding-1:-Proxy-Bias-Confirmed">Finding 1: Proxy Bias Confirmed<a class="anchor-link" href="#Finding-1:-Proxy-Bias-Confirmed">¶</a></h2><p><strong>Rural respondents are 59.50% female vs 40.50% male.</strong>
-<strong>Urban respondents are 58.20% female vs 41.80% male.</strong></p>
-<p>Female respondents at both Rural and Urban locations exceed my 55% threshold. This confirms that <code>location_type</code> is a proxy variable for <code>gender_of_respondent</code>. If the model is heavily weighted on <code>location_type</code>, it will indirectly discriminate by gender, without ever explicitly using gender as an input. This is called <strong>hidden discrimination risk</strong> or <strong>proxy bias</strong>.</p>
-<p><strong>Note:</strong> The 55% threshold is a ClearBoxAI internal standard set specifically for this audit. It is not a universal regulatory requirement. No precise numerical threshold for proxy bias detection is specified in BoG CISD 2026, the EU AI Act, or the NIST AI RMF.</p>
+<h2 id="Finding-1:-Systemic-Proxy-Bias-Confirmed">Finding 1: Systemic Proxy Bias Confirmed<a class="anchor-link" href="#Finding-1:-Systemic-Proxy-Bias-Confirmed">¶</a></h2><p>The multi-variable audit confirms that <code>location_type</code>, <code>job_type</code>, <code>education_level</code>, and <code>relationship_with_head</code> all function as proxies/substitutes for gender.</p>
+<h3 id="The-Smoking-Guns:">The Smoking Guns:<a class="anchor-link" href="#The-Smoking-Guns:">¶</a></h3><p><strong>Social Risk (relationship_with_head):</strong> The Spouse category is a near-perfect proxy at 98.6% female.</p>
+<p><strong>Economic Risk (job_type):</strong> No Income (80.9%) and Remittance Dependent (76.1%) are heavily skewed female.</p>
+<p><strong>Educational Risk (education_level):</strong> No formal education (70.6%) shows a significant gender gap.</p>
+<p><strong>Geographic Risk (location_type):</strong> Both Rural (59.5%) and Urban (58.2%) exceed the risk threshold.</p>
 <hr/>
-<p><strong>Risk Level: HIGH</strong></p>
-<table>
+<h3 id="Technical-Note:-The-%22Locked-Door%22-Analogy">Technical Note: The "Locked Door" Analogy<a class="anchor-link" href="#Technical-Note:-The-%22Locked-Door%22-Analogy">¶</a></h3><p>A whole feature is flagged as a proxy even if only one category (selection/ option) within it exceeds the threshold. Think of a feature with 100 categories (selections/ options) like a building with 100 doors. If 99 doors are locked but one is left wide open, the building is not "100% secure". It is compromised.</p>
+<p>While a category like Child (52.5%) is a "locked door" that hides gender, the Spouse category (98.6%) is a "door left wide open." It provides a direct path for the model to identify gender, meaning the entire feature must be flagged as a security risk to model fairness.</p>
+<hr/>
+<h3 id="Conclusion:">Conclusion:<a class="anchor-link" href="#Conclusion:">¶</a></h3><p>Because there is a red-flag "open door" in all of the features we selected, the model is at high risk for Hidden Discrimination. It could inadvertently penalize female applicants by using these proxies as substitutes for gender.</p>
+<hr/>
+<h3 id="Risk-Level:-HIGH">Risk Level: HIGH<a class="anchor-link" href="#Risk-Level:-HIGH">¶</a></h3><h3 id="Regulatory-Framework">Regulatory Framework<a class="anchor-link" href="#Regulatory-Framework">¶</a></h3><table>
 <thead>
 <tr>
-<th>Regulatory Framework</th>
+<th>Framework</th>
 <th>Provision</th>
 <th>Relevance</th>
 </tr>
@@ -7912,27 +8211,27 @@ I set it as a threshold just for this specific audit.</p>
 <tr>
 <td>BoG CISD 2026</td>
 <td>Section 100(2)(b)</td>
-<td>AI/ML Oversight Committee must conduct ethical and fairness assessments</td>
+<td>Requirement for ethical and fairness assessments</td>
 </tr>
 <tr>
 <td>BoG CISD 2026</td>
 <td>Annexure E</td>
-<td>Names "Bias and Discrimination: Risks of unfair outcomes due to biased training data or model" explicitly</td>
+<td>Explicitly names "Bias and Discrimination" as a core risk</td>
 </tr>
 <tr>
 <td>EU AI Act</td>
 <td>Article 10(2)(f)</td>
-<td>Training data must be examined for "possible biases likely to lead to discrimination"</td>
+<td>Mandates examination of training data for discriminatory bias</td>
 </tr>
 <tr>
 <td>NIST AI RMF</td>
-<td>MEASURE 2.11</td>
-<td>"Fairness and bias are evaluated and results are documented"</td>
+<td>MEASURE 2.1</td>
+<td>Requires identification of proxy variables and their relationships</td>
 </tr>
 </tbody>
 </table>
 <hr/>
-<p><strong>Auditor:</strong> Kwadwo Amponsah | ClearBoxAI
+<p><strong>Auditor:</strong> Kwadwo Amponsah | ClearBoxAI<br/>
 <strong>Date:</strong> April 2026</p>
 </div>
 </div>
